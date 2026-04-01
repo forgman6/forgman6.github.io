@@ -6,7 +6,8 @@
 </head>
 <body>
     <noscript>You need javascript buddy</noscript>
-    <h1 id="time">Loading...</h1>
+    <h1 id="time">No isoString parameter</h1>
+    <h2 id="relative"></h2>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         let isoString = urlParams.get('isoString');
@@ -14,6 +15,56 @@
         isodate = new Date(isoString);
         const time = document.getElementById("time");
         time.innerText = isodate.toLocaleString();
+        //vibe code begin
+        function getRelativeTime(date) {
+              if (!(date instanceof Date) || isNaN(date)) {
+                throw new Error("Invalid Date object provided");
+              }
+            
+              const now = new Date();
+              const diffMs = date.getTime() - now.getTime();   // positive = future, negative = past
+              const diffSec = Math.round(diffMs / 1000);
+            
+              // Define units in descending order of size
+              const units = [
+                { unit: 'year',   seconds: 31536000 }, // 365 days
+                { unit: 'month',  seconds: 2592000 },  // 30 days
+                { unit: 'week',   seconds: 604800 },
+                { unit: 'day',    seconds: 86400 },
+                { unit: 'hour',   seconds: 3600 },
+                { unit: 'minute', seconds: 60 },
+                { unit: 'second', seconds: 1 }
+              ];
+            
+              // Find the best unit (largest one where |diff| >= 1)
+              let value = 0;
+              let unit = 'second';
+            
+              for (const u of units) {
+                const absDiff = Math.abs(diffSec);
+                if (absDiff >= u.seconds) {
+                  value = Math.round(diffSec / u.seconds);
+                  unit = u.unit;
+                  break;
+                }
+              }
+            
+              // Special case: very small differences
+              if (Math.abs(diffSec) < 1) {
+                return "just now";
+              }
+            
+              // Create the formatter (use user's locale, or 'en' as fallback)
+              const rtf = new Intl.RelativeTimeFormat(navigator.language || 'en', {
+                numeric: 'auto',   // "yesterday" / "tomorrow" instead of "1 day ago"
+                style: 'long'      // "2 hours ago" (vs short: "2h ago")
+              });
+        
+          return rtf.format(value, unit);
+        }
+        //vibe code end
+        const relative = document.getElementById("relative");
+        relative.innerText = getRelativeTime(isodate);
     </script>
 </body>
 
